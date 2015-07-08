@@ -1,0 +1,9 @@
+[package]
+name = "imgur"
+version = "0.1.0"
+authors = ["Mika Attila <radiantstatue@gmail.com>"]
+
+[dependencies]
+curl = "*"
+serde = "*"
+try_opt = "*"

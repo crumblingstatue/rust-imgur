@@ -1,0 +1,99 @@
+extern crate curl;
+extern crate serde;
+#[macro_use]
+extern crate try_opt;
+
+use serde::json::{self, Value};
+use std::fmt;
+
+macro_rules! api_url (
+    ($url: expr) => (
+        concat!("https://api.imgur.com/3/", $url)
+    );
+);
+
+pub struct Handle {
+    client_id: String,
+}
+
+impl Handle {
+    pub fn new(client_id: String) -> Self {
+        Handle {
+            client_id: client_id,
+        }
+    }
+
+    pub fn upload(&self, data: &[u8]) -> Result<UploadInfo, UploadError> {
+        use std::io::Cursor;
+        let mut handle = curl::http::handle();
+        let mut cursor = Cursor::new(data);
+        let request = handle.post(api_url!("image"), &mut cursor)
+                            .header("Authorization", &format!("Client-ID {}", self.client_id));
+        let response = try!(request.exec());
+        let text = try!(std::str::from_utf8(response.get_body()));
+        Ok(UploadInfo {
+            json: try!(json::from_str(text)),
+        })
+    }
+}
+
+pub struct UploadInfo {
+    json: Value,
+}
+
+impl UploadInfo {
+    /// Returns the link the image was uploaded to, if any.
+    pub fn link(&self) -> Option<&str> {
+        let data = try_opt!(self.json.find("data"));
+        data.find("link").and_then(|v| v.as_string())
+    }
+}
+
+enum UploadErrorKind {
+    CurlErrCode(curl::ErrCode),
+    ResponseBodyInvalidUtf8(std::str::Utf8Error),
+    ResponseBodyInvalidJson(json::Error),
+}
+
+pub struct UploadError {
+    kind: UploadErrorKind,
+}
+
+impl From<curl::ErrCode> for UploadError {
+    fn from(src: curl::ErrCode) -> Self {
+        UploadError {
+            kind: UploadErrorKind::CurlErrCode(src),
+        }
+    }
+}
+
+impl From<std::str::Utf8Error> for UploadError {
+    fn from(src: std::str::Utf8Error) -> Self {
+        UploadError {
+            kind: UploadErrorKind::ResponseBodyInvalidUtf8(src),
+        }
+    }
+}
+
+impl From<json::Error> for UploadError {
+    fn from(src: json::Error) -> Self {
+        UploadError {
+            kind: UploadErrorKind::ResponseBodyInvalidJson(src),
+        }
+    }
+}
+
+impl fmt::Display for UploadError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use UploadErrorKind::*;
+        match self.kind {
+            CurlErrCode(code) => write!(f, "Curl error code: {}", code),
+            ResponseBodyInvalidUtf8(err) => {
+                write!(f, "Response body is not valid utf-8: {}", err)
+            }
+            ResponseBodyInvalidJson(ref err) => {
+                write!(f, "Response body is not valid json: {}", err)
+            }
+        }
+    }
+}
