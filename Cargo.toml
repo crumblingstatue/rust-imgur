@@ -2,6 +2,9 @@
 name = "imgur"
 version = "0.1.0"
 authors = ["Mika Attila <radiantstatue@gmail.com>"]
+description = "Interface to the imgur API."
+license = "MIT"
+repository = "https://github.com/crumblingstatue/rust-imgur.git"
 
 [dependencies]
 curl = "*"
