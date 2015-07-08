@@ -1,3 +1,7 @@
+//! Interface to the imgur API.
+
+#![warn(missing_docs)]
+
 extern crate curl;
 extern crate serde;
 #[macro_use]
@@ -12,17 +16,32 @@ macro_rules! api_url (
     );
 );
 
+/// A handle to the imgur API.
 pub struct Handle {
     client_id: String,
 }
 
 impl Handle {
+    /// Create a new handle.
+    ///
+    /// # Parameters
+    ///
+    /// client_id: Client ID required to access the imgur API.
     pub fn new(client_id: String) -> Self {
         Handle {
             client_id: client_id,
         }
     }
 
+    /// Upload image data to imgur.
+    ///
+    /// # Parameters
+    ///
+    /// data: The image data to upload.
+    ///
+    /// # Returns
+    ///
+    /// UploadInfo on success, UploadError on failure.
     pub fn upload(&self, data: &[u8]) -> Result<UploadInfo, UploadError> {
         use std::io::Cursor;
         let mut handle = curl::http::handle();
@@ -37,6 +56,7 @@ impl Handle {
     }
 }
 
+/// Information about an uploaded image.
 pub struct UploadInfo {
     json: Value,
 }
@@ -55,6 +75,7 @@ enum UploadErrorKind {
     ResponseBodyInvalidJson(json::Error),
 }
 
+/// Error that can happen on image upload.
 pub struct UploadError {
     kind: UploadErrorKind,
 }
