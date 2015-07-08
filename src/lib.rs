@@ -9,6 +9,7 @@ extern crate try_opt;
 
 use serde::json::{self, Value};
 use std::fmt;
+use std::error::Error;
 
 macro_rules! api_url (
     ($url: expr) => (
@@ -69,12 +70,14 @@ impl UploadInfo {
     }
 }
 
+#[derive(Debug)]
 enum UploadErrorKind {
     CurlErrCode(curl::ErrCode),
     ResponseBodyInvalidUtf8(std::str::Utf8Error),
     ResponseBodyInvalidJson(json::Error),
 }
 
+#[derive(Debug)]
 /// Error that can happen on image upload.
 pub struct UploadError {
     kind: UploadErrorKind,
@@ -117,4 +120,8 @@ impl fmt::Display for UploadError {
             }
         }
     }
+}
+
+impl Error for UploadError {
+    fn description(&self) -> &str { "Image upload error" }
 }
