@@ -52,7 +52,13 @@ impl Handle {
         let response = try!(request.exec());
         let text = try!(std::str::from_utf8(response.get_body()));
         Ok(UploadInfo {
-            json: try!(json::from_str(text)),
+            json: match json::from_str(text) {
+                Ok(value) => value,
+                Err(e) => {
+                    let kind = UploadErrorKind::ResponseBodyInvalidJson(text.into(), e);
+                    return Err(UploadError{ kind: kind });
+                }
+            },
         })
     }
 }
@@ -74,7 +80,7 @@ impl UploadInfo {
 enum UploadErrorKind {
     CurlErrCode(curl::ErrCode),
     ResponseBodyInvalidUtf8(std::str::Utf8Error),
-    ResponseBodyInvalidJson(json::Error),
+    ResponseBodyInvalidJson(String, json::Error),
 }
 
 #[derive(Debug)]
@@ -99,14 +105,6 @@ impl From<std::str::Utf8Error> for UploadError {
     }
 }
 
-impl From<json::Error> for UploadError {
-    fn from(src: json::Error) -> Self {
-        UploadError {
-            kind: UploadErrorKind::ResponseBodyInvalidJson(src),
-        }
-    }
-}
-
 impl fmt::Display for UploadError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use UploadErrorKind::*;
@@ -115,8 +113,8 @@ impl fmt::Display for UploadError {
             ResponseBodyInvalidUtf8(err) => {
                 write!(f, "Response body is not valid utf-8: {}", err)
             }
-            ResponseBodyInvalidJson(ref err) => {
-                write!(f, "Response body is not valid json: {}", err)
+            ResponseBodyInvalidJson(ref body, ref err) => {
+                write!(f, "Response body is not valid json. body: {:?}, err: {}", body, err)
             }
         }
     }
