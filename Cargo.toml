@@ -1,6 +1,6 @@
 [package]
 name = "imgur"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Mika Attila <radiantstatue@gmail.com>"]
 description = "Interface to the imgur API."
 license = "MIT"
