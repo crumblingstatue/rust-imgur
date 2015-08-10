@@ -3,11 +3,11 @@
 #![warn(missing_docs)]
 
 extern crate curl;
-extern crate serde;
+extern crate serde_json as json;
 #[macro_use]
 extern crate try_opt;
 
-use serde::json::{self, Value};
+use json::Value;
 use std::fmt;
 use std::error::Error;
 

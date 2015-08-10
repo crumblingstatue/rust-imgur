@@ -9,5 +9,5 @@ documentation = "http://crumblingstatue.github.io/doc/imgur/imgur/index.html"
 
 [dependencies]
 curl = "*"
-serde = "*"
+serde_json = "*"
 try_opt = "*"
