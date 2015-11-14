@@ -29,9 +29,7 @@ impl Handle {
     ///
     /// client_id: Client ID required to access the imgur API.
     pub fn new(client_id: String) -> Self {
-        Handle {
-            client_id: client_id,
-        }
+        Handle { client_id: client_id }
     }
 
     /// Upload image data to imgur.
@@ -56,7 +54,7 @@ impl Handle {
                 Ok(value) => value,
                 Err(e) => {
                     let kind = UploadErrorKind::ResponseBodyInvalidJson(text.into(), e);
-                    return Err(UploadError{ kind: kind });
+                    return Err(UploadError { kind: kind });
                 }
             },
         })
@@ -91,17 +89,13 @@ pub struct UploadError {
 
 impl From<curl::ErrCode> for UploadError {
     fn from(src: curl::ErrCode) -> Self {
-        UploadError {
-            kind: UploadErrorKind::CurlErrCode(src),
-        }
+        UploadError { kind: UploadErrorKind::CurlErrCode(src) }
     }
 }
 
 impl From<std::str::Utf8Error> for UploadError {
     fn from(src: std::str::Utf8Error) -> Self {
-        UploadError {
-            kind: UploadErrorKind::ResponseBodyInvalidUtf8(src),
-        }
+        UploadError { kind: UploadErrorKind::ResponseBodyInvalidUtf8(src) }
     }
 }
 
@@ -114,12 +108,17 @@ impl fmt::Display for UploadError {
                 write!(f, "Response body is not valid utf-8: {}", err)
             }
             ResponseBodyInvalidJson(ref body, ref err) => {
-                write!(f, "Response body is not valid json. body: {:?}, err: {}", body, err)
+                write!(f,
+                       "Response body is not valid json. body: {:?}, err: {}",
+                       body,
+                       err)
             }
         }
     }
 }
 
 impl Error for UploadError {
-    fn description(&self) -> &str { "Image upload error" }
+    fn description(&self) -> &str {
+        "Image upload error"
+    }
 }
