@@ -104,9 +104,7 @@ impl fmt::Display for UploadError {
         use UploadErrorKind::*;
         match self.kind {
             CurlErrCode(code) => write!(f, "Curl error code: {}", code),
-            ResponseBodyInvalidUtf8(err) => {
-                write!(f, "Response body is not valid utf-8: {}", err)
-            }
+            ResponseBodyInvalidUtf8(err) => write!(f, "Response body is not valid utf-8: {}", err),
             ResponseBodyInvalidJson(ref body, ref err) => {
                 write!(f,
                        "Response body is not valid json. body: {:?}, err: {}",

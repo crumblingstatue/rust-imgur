@@ -1,5 +1,3 @@
-#![feature(result_expect)]
-
 extern crate imgur;
 
 use std::fs::File;
