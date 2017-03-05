@@ -5,8 +5,6 @@
 extern crate hyper;
 extern crate hyper_rustls;
 extern crate serde_json as json;
-#[macro_use]
-extern crate try_opt;
 
 use json::Value;
 use std::fmt;
@@ -76,8 +74,7 @@ pub struct UploadInfo {
 impl UploadInfo {
     /// Returns the link the image was uploaded to, if any.
     pub fn link(&self) -> Option<&str> {
-        let data = try_opt!(self.json.get("data"));
-        data.get("link").and_then(|v| v.as_str())
+        self.json.get("data").and_then(|data| data.get("link").and_then(|v| v.as_str()))
     }
 }
 
