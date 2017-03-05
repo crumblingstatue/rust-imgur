@@ -76,8 +76,8 @@ pub struct UploadInfo {
 impl UploadInfo {
     /// Returns the link the image was uploaded to, if any.
     pub fn link(&self) -> Option<&str> {
-        let data = try_opt!(self.json.find("data"));
-        data.find("link").and_then(|v| v.as_string())
+        let data = try_opt!(self.json.get("data"));
+        data.get("link").and_then(|v| v.as_str())
     }
 }
 

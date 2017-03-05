@@ -10,5 +10,5 @@ documentation = "http://crumblingstatue.github.io/doc/imgur/imgur/index.html"
 [dependencies]
 hyper = "0.10.5"
 hyper-rustls = "0.3.2"
-serde_json = "0.6.0"
+serde_json = "0.9.8"
 try_opt = "0.1.1"
