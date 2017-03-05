@@ -4,8 +4,8 @@ use std::fs::File;
 use std::io::Read;
 
 fn main() {
-    let ref mut args = std::env::args();
-    let filename = args.skip(1).next().expect("Need an image path as 1st argument");
+    let args = &mut std::env::args();
+    let filename = args.nth(1).expect("Need an image path as 1st argument");
     let id = args.next().expect("Need a client ID as 2nd argument");
     let mut file = File::open(filename).expect("Could not open image file");
     let mut data = Vec::new();
