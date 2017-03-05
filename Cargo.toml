@@ -8,6 +8,7 @@ repository = "https://github.com/crumblingstatue/rust-imgur.git"
 documentation = "http://crumblingstatue.github.io/doc/imgur/imgur/index.html"
 
 [dependencies]
-curl = "0.2.12"
+hyper = "0.10.5"
+hyper-rustls = "0.3.2"
 serde_json = "0.6.0"
 try_opt = "0.1.1"

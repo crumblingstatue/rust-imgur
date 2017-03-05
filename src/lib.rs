@@ -2,7 +2,8 @@
 
 #![warn(missing_docs)]
 
-extern crate curl;
+extern crate hyper;
+extern crate hyper_rustls;
 extern crate serde_json as json;
 #[macro_use]
 extern crate try_opt;
@@ -10,6 +11,7 @@ extern crate try_opt;
 use json::Value;
 use std::fmt;
 use std::error::Error;
+use std::io;
 
 macro_rules! api_url (
     ($url: expr) => (
@@ -42,15 +44,20 @@ impl Handle {
     ///
     /// UploadInfo on success, UploadError on failure.
     pub fn upload(&self, data: &[u8]) -> Result<UploadInfo, UploadError> {
-        use std::io::Cursor;
-        let mut handle = curl::http::handle();
-        let mut cursor = Cursor::new(data);
-        let request = handle.post(api_url!("image"), &mut cursor)
-                            .header("Authorization", &format!("Client-ID {}", self.client_id));
-        let response = try!(request.exec());
-        let text = try!(std::str::from_utf8(response.get_body()));
+        use hyper::Client;
+        use hyper::header::Authorization;
+        use hyper::net::HttpsConnector;
+        use std::io::Read;
+
+        let client = Client::with_connector(HttpsConnector::new(hyper_rustls::TlsClient::new()));
+        let mut response = client.post(api_url!("image"))
+            .header(Authorization(format!("Client-ID {}", self.client_id)))
+            .body(data)
+            .send()?;
+        let mut text = String::new();
+        response.read_to_string(&mut text)?;
         Ok(UploadInfo {
-            json: match json::from_str(text) {
+            json: match json::from_str(&text) {
                 Ok(value) => value,
                 Err(e) => {
                     let kind = UploadErrorKind::ResponseBodyInvalidJson(text.into(), e);
@@ -76,7 +83,8 @@ impl UploadInfo {
 
 #[derive(Debug)]
 enum UploadErrorKind {
-    CurlErrCode(curl::ErrCode),
+    Hyper(hyper::Error),
+    Io(io::Error),
     ResponseBodyInvalidUtf8(std::str::Utf8Error),
     ResponseBodyInvalidJson(String, json::Error),
 }
@@ -87,15 +95,21 @@ pub struct UploadError {
     kind: UploadErrorKind,
 }
 
-impl From<curl::ErrCode> for UploadError {
-    fn from(src: curl::ErrCode) -> Self {
-        UploadError { kind: UploadErrorKind::CurlErrCode(src) }
-    }
-}
-
 impl From<std::str::Utf8Error> for UploadError {
     fn from(src: std::str::Utf8Error) -> Self {
         UploadError { kind: UploadErrorKind::ResponseBodyInvalidUtf8(src) }
+    }
+}
+
+impl From<hyper::Error> for UploadError {
+    fn from(src: hyper::Error) -> Self {
+        Self { kind: UploadErrorKind::Hyper(src) }
+    }
+}
+
+impl From<io::Error> for UploadError {
+    fn from(src: io::Error) -> Self {
+        Self { kind: UploadErrorKind::Io(src) }
     }
 }
 
@@ -103,7 +117,8 @@ impl fmt::Display for UploadError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use UploadErrorKind::*;
         match self.kind {
-            CurlErrCode(code) => write!(f, "Curl error code: {}", code),
+            Hyper(ref err) => write!(f, "Hyper error: {}", err),
+            Io(ref err) => write!(f, "I/O error: {}", err),
             ResponseBodyInvalidUtf8(err) => write!(f, "Response body is not valid utf-8: {}", err),
             ResponseBodyInvalidJson(ref body, ref err) => {
                 write!(f,
