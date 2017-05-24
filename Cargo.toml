@@ -1,6 +1,6 @@
 [package]
 name = "imgur"
-version = "0.6.0"
+version = "0.7.0"
 authors = ["Mika Attila <radiantstatue@gmail.com>"]
 description = "Interface to the imgur API."
 license = "MIT"
@@ -9,5 +9,5 @@ documentation = "http://crumblingstatue.github.io/doc/imgur/imgur/index.html"
 
 [dependencies]
 hyper = "0.10.5"
-hyper-rustls = "0.3.2"
-serde_json = "0.9.8"
+hyper-rustls = "0.6.0"
+serde_json = "1.0.2"
